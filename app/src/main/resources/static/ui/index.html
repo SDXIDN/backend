@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Course Demo UI</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 0 16px; }
+  button { display: block; margin: 8px 0; padding: 8px 12px; cursor: pointer; }
+  pre { background: #f0f0f0; padding: 12px; white-space: pre-wrap; word-break: break-all; }
+  h1 { font-size: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Java for everyone </h1>
+
+<p>
+  You reached this page, which means the OIDC login redirect already
+  succeeded - this URL (<code>/ui/index.html</code>) requires
+  authentication, so Spring Security bounced you through Keycloak's login
+  page before you got here.
+</p>
+
+<button onclick="fetchToken()">1. Fetch my access token (from session)</button>
+<button onclick="callEndpoint('/api/public/ping')">2. Call /api/public/ping (no auth needed)</button>
+<button onclick="callEndpoint('/api/secure/me')">3. Call /api/secure/me (needs token)</button>
+<button onclick="callEndpoint('/api/admin/reports')">4. Call /api/admin/reports (needs ADMIN role)</button>
+<button onclick="callEndpoint('/api/reports')">5. Call /api/reports (USER)</button>
+<button onclick="callEndpoint('/api/reports/more')">6. Call /api/reports/more (@PreAuthorize ADMIN)</button>
+<button onclick="logout()">Logout</button>
+<p><a href="/ui/bookings">Thymeleaf-сторінка бронювань (create + list)</a></p>
+
+<h1>Bookings CRUD (/api/v1/bookings)</h1>
+<p>Спочатку натисни «1. Fetch my access token». Create — USER, Update/Delete — тільки ADMIN (інакше 403).</p>
+<form id="bf" onsubmit="saveBooking(event)">
+  <input type="hidden" id="b-id">
+  <input id="b-title" placeholder="Title" required>
+  <input id="b-email" type="email" placeholder="Customer email" required>
+  <input id="b-start" type="datetime-local" required>
+  <input id="b-end" type="datetime-local" required>
+  <button type="submit">Save (create / update)</button>
+  <button type="button" onclick="resetForm()">Clear</button>
+</form>
+<button onclick="loadBookings()">Reload list</button>
+<table id="bt" border="1" cellpadding="4" style="border-collapse:collapse;width:100%">
+  <thead><tr><th>ID</th><th>Title</th><th>Email</th><th>Start</th><th>End</th><th>Status</th><th></th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<pre id="output">(responses show up here)</pre>
+
+<script>
+  let accessToken = null;
+
+  async function fetchToken() {
+    const res = await fetch('/ui/token', { credentials: 'include' });
+    const data = await res.json();
+    accessToken = data.access_token;
+    show('Got access token (truncated): ' + accessToken.substring(0, 40) + '...');
+  }
+
+  async function callEndpoint(path) {
+    const headers = accessToken ? { 'Authorization': 'Bearer ' + accessToken } : {};
+    const res = await fetch(path, { headers });
+    const status = res.status;
+    const raw = await res.text();
+    let body;
+    try { body = JSON.stringify(JSON.parse(raw), null, 2); } catch (e) { body = raw; }
+    show('GET ' + path + ' -> ' + status + '\n' + body);
+  }
+
+  const BOOKINGS = '/api/v1/bookings';
+
+  async function bookingApi(path, method, body) {
+    if (!accessToken) await fetchToken();
+    const res = await fetch(BOOKINGS + path, {
+      method,
+      headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const raw = await res.text();
+    if (!res.ok) { show(method + ' ' + BOOKINGS + path + ' -> ' + res.status + '\n' + raw); throw new Error(res.status); }
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  async function loadBookings() {
+    const items = await bookingApi('', 'GET');
+    const tbody = document.querySelector('#bt tbody');
+    tbody.innerHTML = '';
+    items.forEach(b => {
+      const tr = document.createElement('tr');
+      [b.id, b.title, b.customerEmail, b.startTime, b.endTime, b.status].forEach(v => {
+        const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+      });
+      const td = document.createElement('td');
+      const e = document.createElement('button'); e.textContent = 'Edit'; e.onclick = () => fillForm(b);
+      const d = document.createElement('button'); d.textContent = 'Delete'; d.onclick = () => deleteBooking(b.id);
+      td.append(e, d); tr.appendChild(td); tbody.appendChild(tr);
+    });
+    show('Loaded ' + items.length + ' booking(s)');
+  }
+
+  function fillForm(b) {
+    document.getElementById('b-id').value = b.id;
+    document.getElementById('b-title').value = b.title;
+    const email = document.getElementById('b-email');
+    email.value = '';
+    email.placeholder = 'Re-enter customer email (masked in list)';
+    document.getElementById('b-start').value = b.startTime.substring(0, 16);
+    document.getElementById('b-end').value = b.endTime.substring(0, 16);
+  }
+
+  function resetForm() {
+    document.getElementById('bf').reset();
+    document.getElementById('b-id').value = '';
+    document.getElementById('b-email').placeholder = 'Customer email';
+  }
+
+  async function saveBooking(ev) {
+    ev.preventDefault();
+    const id = document.getElementById('b-id').value;
+    const body = {
+      title: document.getElementById('b-title').value,
+      customerEmail: document.getElementById('b-email').value,
+      startTime: document.getElementById('b-start').value + ':00',
+      endTime: document.getElementById('b-end').value + ':00'
+    };
+    try {
+      await bookingApi(id ? '/' + id : '', id ? 'PUT' : 'POST', body);
+      resetForm(); await loadBookings();
+    } catch (e) { }
+  }
+
+  async function deleteBooking(id) {
+    try { await bookingApi('/' + id, 'DELETE'); await loadBookings(); } catch (e) { }
+  }
+
+  function logout() {
+    window.location.href = '/logout';
+  }
+
+  function show(text) {
+    document.getElementById('output').textContent = text;
+  }
+</script>
+
+</body>
+</html>

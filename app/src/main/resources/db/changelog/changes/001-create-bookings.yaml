@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-bookings
+      author: student
+      changes:
+        - createTable:
+            tableName: bookings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 002-seed-bookings
+      author: student
+      changes:
+        - insert:
+            tableName: bookings
+            columns:
+              - column: { name: title, value: "Demo booking" }
+              - column: { name: customer_email, value: "demo@example.com" }
+              - column: { name: start_time, valueDate: "2026-12-01T10:00:00" }
+              - column: { name: end_time, valueDate: "2026-12-01T11:00:00" }
+              - column: { name: status, value: "PENDING" }

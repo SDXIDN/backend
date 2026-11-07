@@ -1,0 +1,49 @@
+{
+  "realm": "course",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": { "realm": [ { "name": "USER" }, { "name": "ADMIN" } ] },
+  "users": [
+    {
+      "username": "user", "enabled": true, "email": "user@example.com",
+      "firstName": "Regular", "lastName": "User", "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "user", "temporary": false } ],
+      "realmRoles": [ "USER" ]
+    },
+    {
+      "username": "admin", "enabled": true, "email": "admin@example.com",
+      "firstName": "Site", "lastName": "Admin", "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "admin", "temporary": false } ],
+      "realmRoles": [ "USER", "ADMIN" ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "booking-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "booking-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [ "http://localhost:8080/*" ],
+      "webOrigins": [ "http://localhost:8080" ],
+      "protocolMappers": [
+        {
+          "name": "realm-roles-flat",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
