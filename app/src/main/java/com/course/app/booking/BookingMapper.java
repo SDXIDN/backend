@@ -11,9 +11,11 @@ public interface BookingMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", constant = "PENDING")
+    @Mapping(target = "reminderSent", ignore = true)
     BookingEntity toEntity(CreateBookingRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "reminderSent", ignore = true)
     void updateEntity(CreateBookingRequest request, @MappingTarget BookingEntity entity);
 }

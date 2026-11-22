@@ -32,4 +32,8 @@ public class BookingEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status;
+
+    @Builder.Default
+    @Column(name = "reminder_sent", nullable = false)
+    private boolean reminderSent = false;
 }

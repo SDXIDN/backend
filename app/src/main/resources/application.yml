@@ -31,6 +31,18 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never        # таблиці QRTZ_* створює Liquibase (changeset 002)
+    overwrite-existing-jobs: true     # конфіг у коді - джерело істини; повторний деплой не дублює завдання
+    wait-for-jobs-to-complete-on-shutdown: true
+    properties:
+      org.quartz.scheduler.instanceName: booking-scheduler
+      org.quartz.threadPool.threadCount: "5"
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.misfireThreshold: "60000"
+
   docker:
     compose:
       enabled: true

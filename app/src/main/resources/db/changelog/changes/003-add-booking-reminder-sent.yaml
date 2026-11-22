@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-booking-reminder-sent
+      author: student
+      changes:
+        - addColumn:
+            tableName: bookings
+            columns:
+              - column:
+                  name: reminder_sent
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

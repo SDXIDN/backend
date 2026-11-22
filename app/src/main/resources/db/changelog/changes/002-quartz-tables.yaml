@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-quartz-tables
+      author: student
+      comment: "Quartz JDBC job store schema (PostgreSQL), adapted from quartz tables_postgres.sql"
+      changes:
+        - sqlFile:
+            path: 002-quartz-tables.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            endDelimiter: ";"
+            stripComments: true
