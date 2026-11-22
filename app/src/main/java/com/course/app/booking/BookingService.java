@@ -5,6 +5,7 @@ import com.course.app.aop.MaskEmail;
 import com.course.app.aop.RateLimited;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @MaskEmail
     @Transactional(readOnly = true)
@@ -30,7 +32,9 @@ public class BookingService {
     public BookingDto create(CreateBookingRequest request) {
         BookingEntity entity = bookingMapper.toEntity(request);
         BookingEntity saved = bookingRepository.save(entity);
-        return bookingMapper.toDto(saved);
+        BookingDto dto = bookingMapper.toDto(saved);
+        eventPublisher.publishEvent(new BookingCreatedEvent(dto));
+        return dto;
     }
 
     @Audited(action = "UPDATE_BOOKING")

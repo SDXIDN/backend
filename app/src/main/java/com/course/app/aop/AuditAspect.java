@@ -3,6 +3,7 @@ package com.course.app.aop;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -16,6 +17,7 @@ public class AuditAspect {
     private final AuditLog auditLog;
     private final Clock clock;
 
+    @Autowired
     public AuditAspect(AuditLog auditLog) {
         this(auditLog, Clock.systemUTC());
     }

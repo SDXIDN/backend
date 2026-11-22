@@ -36,6 +36,15 @@ spring:
       enabled: true
       lifecycle-management: start-and-stop
 
+app:
+  simulated-delay-ms: 1000        # імітація повільних викликів (пошта, PDF, календар)
+  async:
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 20
+    thread-name-prefix: booking-async-
+    confirmation-timeout-ms: 3000
+
 management:
   endpoints:
     web:

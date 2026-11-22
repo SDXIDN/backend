@@ -15,6 +15,7 @@ public record ApiError(int status, String error, String message, Instant timesta
             case 404 -> "Not Found";
             case 400 -> "Bad Request";
             case 429 -> "Too Many Requests";
+            case 503 -> "Service Unavailable";
             default -> "Error";
         };
     }

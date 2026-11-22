@@ -3,6 +3,7 @@ package com.course.app.error;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -68,6 +69,22 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ApiError> response = handler.handleValidation(exception(bindingResult));
 
         assertEquals("Validation failed", response.getBody().message());
+    }
+
+    @Test
+    void handleServiceBusy_serviceBusy_returns503WithRetryAfterNot500() {
+        ResponseEntity<ApiError> response = handler.handleServiceBusy(new ServiceBusyException("full", null));
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals("5", response.getHeaders().getFirst("Retry-After"));
+        assertEquals("Service is busy, please try again later", response.getBody().message());
+    }
+
+    @Test
+    void handleServiceBusy_taskRejected_returns503() {
+        ResponseEntity<ApiError> response = handler.handleServiceBusy(new TaskRejectedException("rejected"));
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
     }
 
     private MethodArgumentNotValidException exception(BeanPropertyBindingResult bindingResult) throws Exception {

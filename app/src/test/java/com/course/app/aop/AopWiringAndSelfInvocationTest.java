@@ -82,7 +82,7 @@ class AopWiringAndSelfInvocationTest {
         dto.setCustomerEmail(UNMASKED);
         when(repo.findAll()).thenReturn(List.of(entity));
         when(mapper.toDto(entity)).thenReturn(dto);
-        BookingService service = proxy(new BookingService(repo, mapper), new MaskEmailAspect());
+        BookingService service = proxy(new BookingService(repo, mapper, org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class)), new MaskEmailAspect());
 
         List<BookingDto> result = service.findAll();
 

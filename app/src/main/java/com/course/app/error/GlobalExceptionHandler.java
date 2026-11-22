@@ -1,6 +1,8 @@
 package com.course.app.error;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.core.task.TaskRejectedException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +36,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ApiError> handleTooManyRequests(TooManyRequestsException ex) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiError.of(429, ex.getMessage()));
+    }
+
+    /**
+     * Переповнення пулу потоків (TaskRejectedException / ServiceBusyException) — це не 500,
+     * а явна відповідь "спробуйте пізніше".
+     */
+    @ExceptionHandler({ServiceBusyException.class, TaskRejectedException.class})
+    public ResponseEntity<ApiError> handleServiceBusy(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, "5")
+                .body(ApiError.of(503, "Service is busy, please try again later"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
